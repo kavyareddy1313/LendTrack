@@ -2,95 +2,704 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>LendTrack – Customer Success Dashboard</title>
-    <style>
-        body {font-family: Arial, sans-serif; margin: 20px; background:#f9f9f9;}
-        h2 {color:#333;}
-        table {border-collapse: collapse; width: 100%; margin-bottom: 30px;}
-        th, td {border: 1px solid #ccc; padding: 8px; text-align: left;}
-        th {background:#e2e2e2;}
-        .chart-container {width: 100%; max-width: 800px; margin:auto;}
-    </style>
-    <!-- Chart.js CDN -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LendTrack | CredGenics Customer Success & Collections Dashboard</title>
+    <!-- Google Fonts & Bootstrap 5 & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --sidebar-bg: #0f172a;
+            --bg-light: #f8fafc;
+            --card-border: #e2e8f0;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-light);
+            color: #1e293b;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        .brand-badge {
+            background: rgba(255, 255, 255, 0.15);
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+        .kpi-card {
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            background: #ffffff;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+        .icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+        .nav-pills .nav-link {
+            font-weight: 600;
+            color: #64748b;
+            border-radius: 10px;
+            padding: 10px 18px;
+            transition: all 0.2s;
+        }
+        .nav-pills .nav-link.active {
+            background-color: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        }
+        .badge-priority-High { background-color: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+        .badge-priority-Medium { background-color: #fef3c7; color: #d97706; border: 1px solid #fde68a; }
+        .badge-priority-Low { background-color: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+
+        .badge-status-Completed, .badge-status-Closed { background-color: #dcfce7; color: #16a34a; }
+        .badge-status-InProgress, .badge-status-In\ Progress { background-color: #e0e7ff; color: #4338ca; }
+        .badge-status-Open { background-color: #fef9c3; color: #ca8a04; }
+
+        .custom-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--card-border);
+        }
+        .custom-table thead th {
+            background: #f1f5f9;
+            color: #475569;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 14px 16px;
+            border: none;
+        }
+        .custom-table tbody td {
+            padding: 14px 16px;
+            vertical-align: middle;
+            border-top: 1px solid #f1f5f9;
+        }
+        .db-code-block {
+            background: #0f172a;
+            color: #38bdf8;
+            font-family: 'Courier New', Courier, monospace;
+            border-radius: 10px;
+            padding: 16px;
+            font-size: 0.88rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
 </head>
 <body>
-    <h1>LendTrack Dashboard</h1>
 
-    <section id="onboarding">
-        <h2>Lender Onboarding Tracker</h2>
-        <table id="lenders-table">
-            <thead><tr><th>ID</th><th>Name</th><th>Onboarding Date</th><th>Status</th></tr></thead>
-            <tbody></tbody>
-        </table>
-    </section>
-
-    <section id="queries">
-        <h2>Client Queries</h2>
-        <table id="queries-table">
-            <thead><tr><th>ID</th><th>Lender ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Owner</th></tr></thead>
-            <tbody></tbody>
-        </table>
-    </section>
-
-    <section id="collections">
-        <h2>Collections Analytics</h2>
-        <div class="chart-container">
-            <canvas id="collectionChart"></canvas>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm" style="background: var(--sidebar-bg);">
+        <div class="container-fluid px-4 py-2">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-shield-check text-primary fs-3"></i>
+                <a class="navbar-brand fs-4 mb-0" href="#">LendTrack</a>
+                <span class="brand-badge text-white-50 ms-1">Customer Success Suite</span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-sm btn-outline-light d-flex align-items-center gap-2" onclick="refreshAll()">
+                    <i class="bi bi-arrow-clockwise"></i> Sync DB
+                </button>
+                <div class="vr bg-secondary opacity-50"></div>
+                <div class="text-white small d-flex align-items-center gap-2">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle">
+                        <i class="bi bi-database-check me-1"></i> SQLite Connected
+                    </span>
+                </div>
+            </div>
         </div>
-    </section>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container-fluid px-4 py-4">
+
+        <!-- Header section with Action Buttons -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+            <div>
+                <h3 class="fw-bold mb-1">Portfolio & Operations Overview</h3>
+                <p class="text-muted mb-0">Track lender onboarding, manage customer escalation tickets, and monitor loan recovery health.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary fw-semibold" data-bs-toggle="modal" data-bs-target="#addLenderModal">
+                    <i class="bi bi-building-add me-1"></i> Add Lender
+                </button>
+                <button class="btn btn-primary fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#addQueryModal">
+                    <i class="bi bi-plus-circle me-1"></i> Log Client Query
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI Metrics Grid -->
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card kpi-card p-3 shadow-sm h-100">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="text-muted small fw-semibold text-uppercase">Total Lenders</span>
+                            <h2 class="fw-bold mb-0 mt-1" id="kpi-total-lenders">--</h2>
+                            <small class="text-success"><i class="bi bi-check-circle-fill me-1"></i><span id="kpi-onboarded-lenders">--</span> Onboarded</small>
+                        </div>
+                        <div class="icon-box bg-primary-subtle text-primary">
+                            <i class="bi bi-buildings"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card kpi-card p-3 shadow-sm h-100">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="text-muted small fw-semibold text-uppercase">CS Query Backlog</span>
+                            <h2 class="fw-bold mb-0 mt-1 text-danger" id="kpi-open-queries">--</h2>
+                            <small class="text-muted"><span id="kpi-total-queries">--</span> Total tickets recorded</small>
+                        </div>
+                        <div class="icon-box bg-danger-subtle text-danger">
+                            <i class="bi bi-chat-left-dots"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card kpi-card p-3 shadow-sm h-100">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="text-muted small fw-semibold text-uppercase">Loan Portfolio</span>
+                            <h2 class="fw-bold mb-0 mt-1" id="kpi-total-loans">₹--</h2>
+                            <small class="text-muted">Total managed value</small>
+                        </div>
+                        <div class="icon-box bg-info-subtle text-info">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card kpi-card p-3 shadow-sm h-100">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="text-muted small fw-semibold text-uppercase">Collection Rate</span>
+                            <h2 class="fw-bold mb-0 mt-1 text-success" id="kpi-collection-pct">--%</h2>
+                            <small class="text-muted">Recovered: <span id="kpi-collected-amt" class="fw-semibold">₹--</span></small>
+                        </div>
+                        <div class="icon-box bg-success-subtle text-success">
+                            <i class="bi bi-graph-up-arrow"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-pills mb-3 gap-2" id="dashboardTab" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" id="lenders-tab" data-bs-toggle="pill" data-bs-target="#lenders-content">
+                    <i class="bi bi-building me-1"></i> Lender Onboarding
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="queries-tab" data-bs-toggle="pill" data-bs-target="#queries-content">
+                    <i class="bi bi-ticket-detailed me-1"></i> Query & Issue Hub
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="collections-tab" data-bs-toggle="pill" data-bs-target="#collections-content">
+                    <i class="bi bi-pie-chart me-1"></i> Collections Analytics
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="db-tab" data-bs-toggle="pill" data-bs-target="#db-content">
+                    <i class="bi bi-database me-1"></i> Database Live Inspector
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Contents -->
+        <div class="tab-content" id="dashboardTabContent">
+
+            <!-- TAB 1: LENDERS ONBOARDING -->
+            <div class="tab-pane fade show active" id="lenders-content">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0">Lender Accounts & Onboarding Lifecycle</h5>
+                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addLenderModal">
+                            <i class="bi bi-plus-lg me-1"></i> Onboard New Lender
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table custom-table" id="lendersTable">
+                            <thead>
+                                <tr>
+                                    <th>Lender ID</th>
+                                    <th>Lender Name</th>
+                                    <th>Onboarding Date</th>
+                                    <th>Lifecycle Status</th>
+                                    <th>Account Status</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: QUERY MANAGEMENT -->
+            <div class="tab-pane fade" id="queries-content">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                        <div class="d-flex gap-2 align-items-center">
+                            <h5 class="fw-bold mb-0">Client Queries & Escalation Board</h5>
+                            <span class="badge bg-secondary-subtle text-secondary" id="query-counter">0 Tickets</span>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <input type="text" id="querySearch" class="form-control form-control-sm" placeholder="Search ticket title or lender..." style="width: 250px;">
+                            <a href="/download/queries" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
+                                <i class="bi bi-download"></i> Export CSV
+                            </a>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table custom-table" id="queriesTable">
+                            <thead>
+                                <tr>
+                                    <th>Ticket #</th>
+                                    <th>Lender</th>
+                                    <th>Query Title</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>CS Owner</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: COLLECTIONS ANALYTICS -->
+            <div class="tab-pane fade" id="collections-content">
+                <div class="row g-3">
+                    <div class="col-12 col-lg-8">
+                        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                            <h5 class="fw-bold mb-3">Lender Collections vs Pending Amounts (₹)</h5>
+                            <div style="height: 320px;">
+                                <canvas id="collectionsBarChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                            <h5 class="fw-bold mb-3">Overall Portfolio Recovery Share</h5>
+                            <div style="height: 250px;" class="d-flex justify-content-center">
+                                <canvas id="collectionsDoughnutChart"></canvas>
+                            </div>
+                            <div class="mt-3 text-center small text-muted">
+                                Real-time ratio of recovered funds vs delinquency.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: DATABASE LIVE INSPECTOR -->
+            <div class="tab-pane fade" id="db-content">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-1">SQLite Database Direct Live Inspector</h5>
+                            <p class="text-muted small mb-0">Directly query and verify records stored on disk in <code id="dbPathDisplay">lendtrack.db</code>.</p>
+                        </div>
+                        <button class="btn btn-sm btn-outline-success" onclick="inspectDatabase()">
+                            <i class="bi bi-arrow-repeat me-1"></i> Re-verify Database
+                        </button>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="text-muted small">File Exists</div>
+                                <div class="fw-bold text-success" id="dbFileExists">Checking...</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="text-muted small">File Size on Disk</div>
+                                <div class="fw-bold" id="dbFileSize">0 KB</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="text-muted small">Persisted Tables</div>
+                                <div class="fw-bold">lenders, queries, collections</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold mt-2">Raw JSON Data from SQLite Tables:</h6>
+                    <pre class="db-code-block" id="dbRawOutput">Loading live database records...</pre>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODAL: ADD LENDER -->
+    <div class="modal fade" id="addLenderModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Onboard New Lender</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addLenderForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Lender Name</label>
+                            <input type="text" id="lenderName" class="form-control" placeholder="e.g. Kotak Retail Loans" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Onboarding Date</label>
+                            <input type="date" id="lenderDate" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Initial Status</label>
+                            <select id="lenderStatus" class="form-select">
+                                <option value="In Progress">In Progress</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Pending Documentation">Pending Documentation</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-semibold">Save to SQLite Database</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD QUERY -->
+    <div class="modal fade" id="addQueryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Log Client Query Ticket</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addQueryForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Select Lender</label>
+                            <select id="queryLenderSelect" class="form-select" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Issue / Query Title</label>
+                            <input type="text" id="queryTitle" class="form-control" placeholder="e.g. Discrepancy in DPD recovery report" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Priority</label>
+                                <select id="queryPriority" class="form-select">
+                                    <option value="High">High</option>
+                                    <option value="Medium" selected>Medium</option>
+                                    <option value="Low">Low</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Initial Status</label>
+                                <select id="queryStatus" class="form-select">
+                                    <option value="Open">Open</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Closed">Closed</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Assigned CS Representative</label>
+                            <input type="text" id="queryAssignee" class="form-control" placeholder="e.g. Kavya Srireddy" value="Kavya Srireddy">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-semibold">Create Ticket in DB</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: VIEW TICKET DETAILS -->
+    <div class="modal fade" id="viewTicketModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold">Ticket Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-0" id="viewTicketBody">
+                    <!-- Dynamic -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        async function loadLenders(){
-            const res = await fetch('/api/lenders');
-            const data = await res.json();
-            const tbody = document.querySelector('#lenders-table tbody');
-            data.forEach(r=>{
-                const tr=document.createElement('tr');
-                tr.innerHTML = `<td>${r.id}</td><td>${r.name}</td><td>${r.onboarding_date}</td><td>${r.onboarding_status}</td>`;
+        let barChartInstance = null;
+        let doughnutChartInstance = null;
+        let globalQueries = [];
+
+        // Set today's date in lender form
+        document.getElementById('lenderDate').value = new Date().toISOString().split('T')[0];
+
+        async function fetchJSON(url) {
+            const res = await fetch(url);
+            return await res.json();
+        }
+
+        async function refreshAll() {
+            await loadSummary();
+            await loadLenders();
+            await loadQueries();
+            await loadCollections();
+            await inspectDatabase();
+        }
+
+        async function loadSummary() {
+            const data = await fetchJSON('/api/summary');
+            document.getElementById('kpi-total-lenders').textContent = data.total_lenders;
+            document.getElementById('kpi-onboarded-lenders').textContent = data.completed_onboarding;
+            document.getElementById('kpi-open-queries').textContent = data.open_queries;
+            document.getElementById('kpi-total-queries').textContent = data.total_queries;
+            document.getElementById('kpi-total-loans').textContent = '₹' + Number(data.total_loans).toLocaleString();
+            document.getElementById('kpi-collection-pct').textContent = data.collection_pct + '%';
+            document.getElementById('kpi-collected-amt').textContent = '₹' + Number(data.collected).toLocaleString();
+        }
+
+        async function loadLenders() {
+            const lenders = await fetchJSON('/api/lenders');
+            const tbody = document.querySelector('#lendersTable tbody');
+            const select = document.getElementById('queryLenderSelect');
+            tbody.innerHTML = '';
+            select.innerHTML = '';
+
+            lenders.forEach(l => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="fw-bold">#${l.id}</td>
+                    <td class="fw-semibold text-primary">${l.name}</td>
+                    <td><i class="bi bi-calendar3 me-1 text-muted"></i>${l.onboarding_date}</td>
+                    <td>
+                        <span class="badge badge-status-${l.onboarding_status.replace(/\s+/g, '')} px-2 py-1">
+                            ${l.onboarding_status}
+                        </span>
+                    </td>
+                    <td><span class="badge bg-success-subtle text-success">Active</span></td>
+                `;
+                tbody.appendChild(tr);
+
+                // Populate Modal Select
+                const opt = document.createElement('option');
+                opt.value = l.id;
+                opt.textContent = l.name;
+                select.appendChild(opt);
+            });
+        }
+
+        async function loadQueries() {
+            globalQueries = await fetchJSON('/api/queries');
+            renderQueries(globalQueries);
+        }
+
+        function renderQueries(queries) {
+            const tbody = document.querySelector('#queriesTable tbody');
+            document.getElementById('query-counter').textContent = `${queries.length} Tickets`;
+            tbody.innerHTML = '';
+
+            if (queries.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">No queries found.</td></tr>`;
+                return;
+            }
+
+            queries.forEach(q => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="fw-bold">#${q.id}</td>
+                    <td><span class="fw-semibold">${q.lender_name}</span></td>
+                    <td>${q.title}</td>
+                    <td><span class="badge badge-priority-${q.priority} px-2 py-1">${q.priority}</span></td>
+                    <td><span class="badge badge-status-${q.status.replace(/\s+/g, '')} px-2 py-1">${q.status}</span></td>
+                    <td><i class="bi bi-person-circle me-1 text-secondary"></i>${q.assigned_to}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="showTicketDetail(${q.id})">
+                            <i class="bi bi-eye"></i> View
+                        </button>
+                    </td>
+                `;
                 tbody.appendChild(tr);
             });
         }
-        async function loadQueries(){
-            const res = await fetch('/api/queries');
-            const data = await res.json();
-            const tbody = document.querySelector('#queries-table tbody');
-            data.forEach(r=>{
-                const tr=document.createElement('tr');
-                tr.innerHTML = `<td>${r.id}</td><td>${r.lender_id}</td><td>${r.title}</td><td>${r.priority}</td><td>${r.status}</td><td>${r.assigned_to}</td>`;
-                tbody.appendChild(tr);
-            });
+
+        async function showTicketDetail(id) {
+            const ticket = await fetchJSON(`/api/query/${id}`);
+            const body = document.getElementById('viewTicketBody');
+            body.innerHTML = `
+                <div class="mb-3">
+                    <span class="badge badge-priority-${ticket.priority} me-2">${ticket.priority} Priority</span>
+                    <span class="badge badge-status-${ticket.status.replace(/\s+/g, '')}">${ticket.status}</span>
+                </div>
+                <h5 class="fw-bold mb-3">${ticket.title}</h5>
+                <ul class="list-group list-group-flush border-top border-bottom mb-3">
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Associated Lender:</span>
+                        <span class="fw-semibold">${ticket.lender_name}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Assigned Owner:</span>
+                        <span class="fw-semibold">${ticket.assigned_to}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Database Record ID:</span>
+                        <span>#${ticket.id}</span>
+                    </li>
+                </ul>
+            `;
+            new bootstrap.Modal(document.getElementById('viewTicketModal')).show();
         }
-        async function loadCollections(){
-            const res = await fetch('/api/collections');
-            const data = await res.json();
-            const labels = data.map(r=>r.lender_name);
-            const totals = data.map(r=>r.total_loans);
-            const collected = data.map(r=>r.collected_amount);
-            const pending = data.map(r=>r.pending_amount);
-            const ctx = document.getElementById('collectionChart').getContext('2d');
-            new Chart(ctx, {
+
+        async function loadCollections() {
+            const data = await fetchJSON('/api/collections');
+            const labels = data.map(r => r.lender_name);
+            const collected = data.map(r => r.collected_amount);
+            const pending = data.map(r => r.pending_amount);
+
+            if (barChartInstance) barChartInstance.destroy();
+            const barCtx = document.getElementById('collectionsBarChart').getContext('2d');
+            barChartInstance = new Chart(barCtx, {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [
-                        {label: 'Total Loans', data: totals, backgroundColor: 'rgba(54,162,235,0.6)'},
-                        {label: 'Collected', data: collected, backgroundColor: 'rgba(75,192,192,0.6)'},
-                        {label: 'Pending', data: pending, backgroundColor: 'rgba(255,99,132,0.6)'}
+                        { label: 'Collected (₹)', data: collected, backgroundColor: '#10b981', borderRadius: 6 },
+                        { label: 'Pending (₹)', data: pending, backgroundColor: '#f43f5e', borderRadius: 6 }
                     ]
                 },
                 options: {
                     responsive: true,
-                    plugins: {legend: {position: 'top'}},
-                    scales: {y: {beginAtZero:true}}
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            // Doughnut
+            const totalCollected = collected.reduce((a, b) => a + b, 0);
+            const totalPending = pending.reduce((a, b) => a + b, 0);
+
+            if (doughnutChartInstance) doughnutChartInstance.destroy();
+            const doughnutCtx = document.getElementById('collectionsDoughnutChart').getContext('2d');
+            doughnutChartInstance = new Chart(doughnutCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Collected', 'Pending Delinquency'],
+                    datasets: [{
+                        data: [totalCollected, totalPending],
+                        backgroundColor: ['#10b981', '#f43f5e'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
                 }
             });
         }
-        // Load all sections
-        loadLenders();
-        loadQueries();
-        loadCollections();
+
+        async function inspectDatabase() {
+            const res = await fetchJSON('/api/db-inspect');
+            document.getElementById('dbPathDisplay').textContent = res.database_file;
+            document.getElementById('dbFileExists').textContent = res.database_exists ? 'YES (Active SQLite File)' : 'NO';
+            document.getElementById('dbFileSize').textContent = (res.database_size_bytes / 1024).toFixed(2) + ' KB';
+            document.getElementById('dbRawOutput').textContent = JSON.stringify(res.tables, null, 2);
+        }
+
+        // Live Search Handler
+        document.getElementById('querySearch').addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            const filtered = globalQueries.filter(q => 
+                q.title.toLowerCase().includes(val) || 
+                q.lender_name.toLowerCase().includes(val) ||
+                q.assigned_to.toLowerCase().includes(val)
+            );
+            renderQueries(filtered);
+        });
+
+        // Add Lender Form Submit -> Stores in DB
+        document.getElementById('addLenderForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('lenderName').value;
+            const onboarding_date = document.getElementById('lenderDate').value;
+            const onboarding_status = document.getElementById('lenderStatus').value;
+
+            const res = await fetch('/api/lenders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, onboarding_date, onboarding_status })
+            });
+
+            if (res.ok) {
+                bootstrap.Modal.getInstance(document.getElementById('addLenderModal')).hide();
+                document.getElementById('addLenderForm').reset();
+                await refreshAll();
+            }
+        });
+
+        // Add Query Form Submit -> Stores in DB
+        document.getElementById('addQueryForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const lender_id = document.getElementById('queryLenderSelect').value;
+            const title = document.getElementById('queryTitle').value;
+            const priority = document.getElementById('queryPriority').value;
+            const status = document.getElementById('queryStatus').value;
+            const assigned_to = document.getElementById('queryAssignee').value;
+
+            const res = await fetch('/api/queries', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ lender_id, title, priority, status, assigned_to })
+            });
+
+            if (res.ok) {
+                bootstrap.Modal.getInstance(document.getElementById('addQueryModal')).hide();
+                document.getElementById('addQueryForm').reset();
+                await refreshAll();
+            }
+        });
+
+        // Initial Load
+        refreshAll();
     </script>
 </body>
 </html>
-
